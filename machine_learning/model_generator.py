@@ -5,7 +5,7 @@ import text_processor as tp
 
 dataset = pd.read_excel('Dataset.xlsx')
 
-class ModelPreprocessing ():
+class ModelDataProcessing ():
     """
         Executes a series of tasks to prepare and output the proper data 
         to be consumed by the training function.
@@ -69,8 +69,21 @@ class ModelPreprocessing ():
         label_frame.assign(self.dataset.at[self.label])
         return label_frame
     
-    def extract_features():
+    def extract_features(self):
         """
             Extract the features of the dataset to be used separately.
         """
         return 
+    
+    def categorizer(self, column):
+        """
+            Transforms a categorical column of type String to type Integer.
+            
+            Parameters:
+                column: The name of the column of categorical values in the
+                dataset that needs to be converted to integer type.
+                
+        """
+        self.dataset[str(column)] = pd.Categorical(self.dataset.column)
+        self.dataset[str(column)] = self.dataset[str(column)].cat.codes
+        return self.dataset
