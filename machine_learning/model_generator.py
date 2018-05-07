@@ -1,10 +1,23 @@
 import numpy as np
 import pandas as pd
+import text_processor as tp
 
+
+dataset = pd.read_excel('Dataset.xlsx')
 
 class ModelPreprocessing ():
-    
-    
+    """
+        Executes a series of tasks to prepare and output the proper data 
+        to be consumed by the training function.
+        
+        Parameters:
+            dataset: DataFrame
+                Requires a Pandas DataFrame as data input.
+            label: String
+                The label is the name of the column which containts 
+                the target values to be predicted.
+        
+    """
     def __init___ (self, dataset, label):
         self.dataset = dataset
         self.label = label
@@ -18,11 +31,20 @@ class ModelPreprocessing ():
                 np.random.permutation(self.dataset.index))
         return self.dataset
     
+    def text_processing(self):
+        """
+            Transforms the column 'TEXTO' column of the dataset into a 
+            list of processed words.
+        """
+        text_processor = tp.TextProcessor(self.dataset,'TEXTO','portuguese')
+        text_processor.full_process()
+        return self.dataset
+    
     def split_dataframe(self):
         """
             Split the dataset into three other datasets.
                 Training Dataset: 
-                    Data which will be used to train the model
+                    Data which will be used to train the model.
                 Validation Dataset: 
                     Data which will be used to validate results.
                 Test Dataset:
@@ -39,10 +61,16 @@ class ModelPreprocessing ():
         return training_data, test_data, validation_data
     
     
-    def process_label(self):
+    def extract_label(self):
+        """
+            Extract the labels of the dataset to be used separately.
+        """
         label_frame = pd.DataFrame()
         label_frame.assign(self.dataset.at[self.label])
         return label_frame
     
-    def set_features():
-        return
+    def extract_features():
+        """
+            Extract the features of the dataset to be used separately.
+        """
+        return 
