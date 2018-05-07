@@ -10,55 +10,74 @@ from nltk.corpus import stopwords
 df_prop = pd.read_excel('Dataset.xlsx')
 
 
-
-
-#Faz a tokenização da coluna TEXTO criando subsequentemente uma nova
-#coluna no dataset com os textos tokenizados. 
-def TokenizeText (dataset):
-    dataset = dataset.assign(TOKENIZADO=pd.Series().astype(list))
-    for idx, text in dataset.iterrows():
-        if not text['TEXTO']:
-            print('O texto a ser tokenizado é do tipo None. Resetando para string vazia.')
-            text['TEXTO'] = ''
-        dataset.at[dataset.index[idx], 'TOKENIZADO'] = nltk.word_tokenize(text['TEXTO'])
-    return dataset
+class TextPreprocessing ():
+    """ 
+        
+    """
+    #Faz a tokenização da coluna TEXTO criando subsequentemente uma nova
+    #coluna no dataset com os textos tokenizados. 
+    def __init__(self, dataset, column):
+        self.dataset = dataset
+        self.column = column
+        self.tokenized = 'TOKENIZED'
     
-#Remove as stopwords dos textos tokenizados
-def RemoveStopwords (dataset, language):
-    stop_words = set(stopwords.words(language))
-    for idx, row in dataset.iterrows():
-        for word in row['TOKENIZADO']:
-            if word in stop_words:
-                dataset.at[dataset.index[idx], 'TOKENIZADO'] = [w for w in row['TOKENIZADO'] if not w in stop_words]        
-    return dataset
-
-
-#Remove itens de pontuação do texto
-def RemovePunctuation (dataset):
-    for idx, row in dataset.iterrows():
-        dataset.at[dataset.index[idx], 'TOKENIZADO'] = [word for word in row['TOKENIZADO'] if word.isalpha()]
-    return dataset
-
-#Converte todas as palavras para minusculas para que não haja diferenciação 
-#entre duas palavras iguais
-def SetAllLowerCase (dataset):
-    for idx, row in dataset.iterrows():
-        dataset.at[dataset.index[idx], 'TOKENIZADO'] = [w.lower() for w in row['TOKENIZADO']]
-    return dataset
-
-#Remove sufixos das palavras para encontrar uma forma raíz da palavra e 
-#eliminar variações de uma mesma palavra
-def Stemming (dataset):
-    stemmer = nltk.stem.RSLPStemmer()
-    for idx, row in dataset.iterrows():
-        dataset.at[dataset.index[idx], 'TOKENIZADO'] = [stemmer.stem(word) for word in row['TOKENIZADO']]
-    return dataset
+    def TokenizeText (self): 
+        self.dataset = self.dataset.assign(TOKENIZED=pd.Series().astype(list))
+        for idx, text in self.dataset.iterrows():
+            if not text[self.column]:
+                print('O texto a ser tokenizado é do tipo None. Resetando para string vazia.')
+                text[self.column] = ''
+            self.dataset.at[self.dataset.index[idx], self.tokenized] = nltk.word_tokenize(text[self.column])
+        return self.dataset
     
+    #Remove as stopwords dos textos tokenizados
+    def RemoveStopwords (self, language):
+        stop_words = set(stopwords.words(language))
+        for idx, row in self.dataset.iterrows():
+            for word in row[self.tokenized]:
+                if word in stop_words:
+                    self.dataset.at[self.dataset.index[idx], self.tokenized] = [w for w in row[self.tokenized] if not w in stop_words]        
+        return self.dataset
 
-#Passa o dataset pelas funções de limpeza do arquivo
-df_prop_tokenized = TokenizeText(df_prop)
-df_prop_no_sw = RemoveStopwords(df_prop_tokenized, 'portuguese')
-df_prop_no_pun = RemovePunctuation (df_prop_no_sw)
-df_prop_lower = SetAllLowerCase(df_prop_no_pun)
-df_prop_stem = Stemming(df_prop_lower)
+
+    #Remove itens de pontuação do texto
+    def RemoveNonAlphabetical (self):
+        for idx, row in self.dataset.iterrows():
+            self.dataset.at[self.dataset.index[idx], self.tokenized] = [word for word in row[self.tokenized] if word.isalpha()]
+        return self.dataset
+
+    #Converte todas as palavras para minusculas para que não haja diferenciação 
+    #entre duas palavras iguais
+    def SetAllLowerCase (self):
+        for idx, row in self.dataset.iterrows():
+            self.dataset.at[self.dataset.index[idx], self.tokenized] = [w.lower() for w in row[self.tokenized]]
+        return self.dataset
+
+    #Remove sufixos das palavras para encontrar uma forma raíz da palavra e 
+    #eliminar variações de uma mesma palavra
+    def Stemming (self):
+        stemmer = nltk.stem.RSLPStemmer()
+        for idx, row in self.dataset.iterrows():
+            self.dataset.at[self.dataset.index[idx], self.tokenized] = [stemmer.stem(word) for word in row[self.tokenized]]
+        return self.dataset
+    
+    def getDataset(self):
+        return self.dataset
+    
+    def FullProcess(self, language):
+        processor = TextPreprocessing(self.dataset, self.column)
+        processed_dataset = processor.TokenizeText()
+        processed_dataset = processor.RemoveStopwords(language)
+        processed_dataset = processor.RemoveNonAlphabetical()
+        processed_dataset = processor.SetAllLowerCase
+        processed_dataset = processor.Stemming()
+        return processed_dataset
+        
+
+
+
+processador = TextPreprocessing(df_prop, 'TEXTO')
+processed_data = processador.FullProcess('portuguese')
+
+
 
