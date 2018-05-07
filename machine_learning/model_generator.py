@@ -18,7 +18,7 @@ class ModelDataProcessing ():
                 the target values to be predicted.
         
     """
-    def __init___ (self, dataset, label):
+    def __init__(self, dataset, label):
         self.dataset = dataset
         self.label = label
     
@@ -51,16 +51,39 @@ class ModelDataProcessing ():
                     Data that will be used to run a last test on 
                     the model with the highest accuracy achieved. 
         """
+        
         train_sample_ratio = 70
-        train_sample_volume = (self.dataset.count() * train_sample_ratio) / 100
+        train_sample_volume = int((self.dataset.count().values[0] * train_sample_ratio) / 100)
         training_data = self.dataset.head(train_sample_volume)
-        full_test_data = self.dataset.tail(self.dataset.count() - train_sample_volume)
-        test_sample_volume = (full_test_data.count() * 70) / 100
+        full_test_data = self.dataset.tail(int(self.dataset.count().values[0] - train_sample_volume))
+        test_sample_volume = int((full_test_data.count().values[0] * 70) / 100)
         test_data = full_test_data.head(test_sample_volume)
-        validation_data = full_test_data.tail(full_test_data.count() - test_sample_volume)
+        validation_data = full_test_data.tail(int(full_test_data.count().values[0] - test_sample_volume))
         return training_data, test_data, validation_data
     
     
+    def assign_training_data(self):
+        """
+            Creates and assigns to a variable the TRAINING set. 
+        """
+        split_frame = ModelDataProcessing(self.dataset, self.label).split_dataframe()[0]
+        return split_frame
+    
+    def assign_test_data(self):
+        """
+            Creates and assigns to a variable the TEST set.
+        """
+        split_frame = ModelDataProcessing(self.dataset, self.label).split_dataframe()[1]
+        return split_frame
+
+    def assign_validation_data(self):
+        """
+            Creates and assigns to a variable the VALIDATION set. 
+        """
+        split_frame = ModelDataProcessing(self.dataset, self.label).split_dataframe()[2]
+        return split_frame
+    
+
     def extract_label(self):
         """
             Extract the labels of the dataset to be used separately.
@@ -81,9 +104,14 @@ class ModelDataProcessing ():
             
             Parameters:
                 column: The name of the column of categorical values in the
-                dataset that needs to be converted to integer type.
-                
+                dataset that needs to be converted to integer type.     
         """
         self.dataset[str(column)] = pd.Categorical(self.dataset.column)
         self.dataset[str(column)] = self.dataset[str(column)].cat.codes
         return self.dataset
+    
+    
+model_processor = ModelDataProcessing(dataset,'TEMAS')
+training_v = model_processor.assign_training_data()
+test_v = model_processor.assign_test_data()
+validation_v = model_processor.assign_validation_data()
