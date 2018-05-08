@@ -71,26 +71,47 @@ class ModelDataProcessing ():
         return training_data, test_data, validation_data
     
     
-    def assign_training_data(self):
+    def assign_x_train(self):
         """
-            Creates and assigns to a variable the TRAINING set. 
+            Creates and assigns to a variable the X TRAINING (Features) set. 
         """
         split_frame = ModelDataProcessing(self.dataset, self.label).__split_dataframe()[0]
-        return split_frame
+        x_train = ModelDataProcessing(split_frame, self.label).extract_features('TOKENIZED')
+        return x_train
     
-    def assign_test_data(self):
+    def assign_y_train(self):
         """
-            Creates and assigns to a variable the TEST set.
+            Creates and assigns to a variable the Y TRAINING (Labels) set. 
+        """
+        split_frame = ModelDataProcessing(self.dataset, self.label).__split_dataframe()[0]
+        y_train = ModelDataProcessing(split_frame, self.label).extract_label()
+        return y_train
+    
+    
+    def assign_x_test(self):
+        """
+            Creates and assigns to a variable the X TEST (Features) set.
         """
         split_frame = ModelDataProcessing(self.dataset, self.label).__split_dataframe()[1]
-        return split_frame
+        x_test = ModelDataProcessing(split_frame, self.label).extract_features('TOKENIZED')
+        return x_test
+    
+    
+    def assign_y_test(self):
+        """
+            Creates and assigns to a variable the Y TEST (Labels) set.
+        """
+        split_frame = ModelDataProcessing(self.dataset, self.label).__split_dataframe()[1]
+        y_train = ModelDataProcessing(split_frame, self.label).extract_label()
+        return y_train
 
-    def assign_validation_data(self):
-        """
-            Creates and assigns to a variable the VALIDATION set. 
-        """
-        split_frame = ModelDataProcessing(self.dataset, self.label).__split_dataframe()[2]
-        return split_frame
+#   *Checking if this will be deprecated*
+#    def assign_validation_data(self):
+#        """
+#            Creates and assigns to a variable the VALIDATION set. 
+#        """
+#        split_frame = ModelDataProcessing(self.dataset, self.label).__split_dataframe()[2]
+#        return split_frame
     
 
     def extract_label(self):
@@ -101,12 +122,13 @@ class ModelDataProcessing ():
         label_frame = self.dataset[self.label]
         return label_frame
     
-    def extract_features(self):
+    def extract_features(self, feature):
         """
             Extract the features of the dataset to be used separately.
         """
         print('Extracting features...')
-        feature_frame = self.dataset.drop(self.label, axis=1)
+        feature_frame = self.dataset[feature]
+#        feature_frame = self.dataset.drop(self.label, axis=1)
         return feature_frame
     
     def num_categorizer(self, column):
@@ -153,7 +175,13 @@ cluttered_dataset = model_processor.clutter_data_order()
 # Text process method test
 processed_text = model_processor.text_processing()
 
-#training_v = model_processor.assign_training_data()
+#Dataset creation tests
+x_train = model_processor.assign_x_train()
+y_train = model_processor.assign_y_train()
+
+x_test = model_processor.assign_x_test()
+y_test = model_processor.assign_y_test()
+
 #test_v = model_processor.assign_test_data()
 #validation_v = model_processor.assign_validation_data()
 #
