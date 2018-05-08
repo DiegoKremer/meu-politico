@@ -4,7 +4,7 @@ from nltk.corpus import stopwords
 
 
 # Import dataset
-df_prop = pd.read_excel('Dataset.xlsx')
+#df_prop = pd.read_excel('Dataset.xlsx')
 
 
 class TextProcessor ():
@@ -38,10 +38,10 @@ class TextProcessor ():
             Tokenizes a text. To tokenize is to break a text into an list of 
             words.
         """
+        print('Tokenizing Text...')
         self.dataset = self.dataset.assign(TOKENIZED=pd.Series().astype(list))
         for idx, text in self.dataset.iterrows():
-            if not text[self.column]:
-                print('O texto a ser tokenizado é do tipo None. Resetando para string vazia.')
+            if not text[self.column]: #Workaround None type in Dataset
                 text[self.column] = ''
             self.dataset.at[self.dataset.index[idx], self.tokenized] = nltk.word_tokenize(text[self.column])
         return self.dataset
@@ -52,6 +52,7 @@ class TextProcessor ():
             Removes all stopwords (words that have no significance)
             from the text for a given language.
         """
+        print('Removing stopwords...')
         stop_words = set(stopwords.words(self.language))
         for idx, row in self.dataset.iterrows():
             for word in row[self.tokenized]:
@@ -65,6 +66,7 @@ class TextProcessor ():
             Removes all words from the list that are not alphabetical. That 
             includes numbers, punctuations and empty spaces. 
         """
+        print('Removing non alphabetical characters...')
         for idx, row in self.dataset.iterrows():
             self.dataset.at[self.dataset.index[idx], self.tokenized] = [word for word in row[self.tokenized] if word.isalpha()]
         return self.dataset
@@ -74,6 +76,7 @@ class TextProcessor ():
         """
             Set all characters of the text to lower case.
         """
+        print('Setting all to lowercase...')
         for idx, row in self.dataset.iterrows():
             self.dataset.at[self.dataset.index[idx], self.tokenized] = [w.lower() for w in row[self.tokenized]]
         return self.dataset
@@ -84,6 +87,7 @@ class TextProcessor ():
             Stemming removes the suffix of words to avoid duplicated words of
             same meaning.
         """
+        print('Stemming words...')
         stemmer = nltk.stem.RSLPStemmer()
         for idx, row in self.dataset.iterrows():
             self.dataset.at[self.dataset.index[idx], self.tokenized] = [stemmer.stem(word) for word in row[self.tokenized]]
@@ -111,12 +115,21 @@ class TextProcessor ():
         processed_dataset = processor.set_all_lowercase
         processed_dataset = processor.stemming()
         return processed_dataset
+    
+    def transform_token_to_string(self, dataset, column):
+        """
+            Transforms the array of processed words into string sentences.
+        """
+        print('Transforming list of words to String sentences...')
+        for idx, row in dataset.iterrows():
+            resentence = ''
+            for word in row[column]:
+                resentence = resentence + ' ' + word
+                dataset.at[dataset.index[idx], column] = resentence
+        return dataset
         
 
 
-
-processador = TextProcessor(df_prop, 'TEXTO', 'portuguese')
-processed_data = processador.full_process()
-
-
-
+#processador = TextProcessor(df_prop, 'TEXTO', 'portuguese')
+#processed_data = processador.full_process()
+#processed_data = processador.transform_token_to_string(processed_data, 'TOKENIZED')
