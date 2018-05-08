@@ -145,18 +145,19 @@ class ModelDataProcessing ():
         self.dataset[str(column)] = self.dataset[str(column)].cat.codes
         return self.dataset
     
+    def category_to_matrix(self, data):
+        num_of_classes = self.num_classes(data)
+        data = krs.utils.to_categorical(data, num_of_classes)
+        return
+    
     
     def num_classes(self):
         """
             Get the total number of classes present of a categorical label.
         """
-        print('Getting total number of classes...')
         num_classes = self.dataset[self.label].unique().max() + 1
         return num_classes
     
-    def convert_text_to_index_array():
-        return
-
     
     def data_to_matrix(self, data):
         """
@@ -190,6 +191,9 @@ cluttered_dataset = model_processor.clutter_data_order()
 # Text process method test
 processed_text = model_processor.text_processing()
 
+num_categorizer = model_processor.num_categorizer('AREAS_TEMATICAS_APRESENTACAO')
+num_classes = model_processor.num_classes()
+
 #Dataset creation tests
 x_train = model_processor.assign_x_train()
 y_train = model_processor.assign_y_train()
@@ -200,6 +204,12 @@ y_test = model_processor.assign_y_test()
 #data_to_matrix tests
 x_train = model_processor.data_to_matrix(x_train)
 x_test = model_processor.data_to_matrix(x_test)
+
+#categorical 
+
+
+y_train = krs.utils.to_categorical(y_train, num_classes)
+y_test = krs.utils.to_categorical(y_test, num_classes)
 
 
 #test_v = model_processor.assign_test_data()
@@ -245,13 +255,13 @@ class ModelTrainer():
         print('Building Model Layers...')
         self.model = Sequential()
         print('Adding Dense layer...')
-        self.model.add(Dense(512, input_shape=(1024,), activation='relu'))
+        self.model.add(Dense(1024, input_shape=(3000,), activation='relu'))
         self.model.add(Dropout(0.5))
         print('Adding Dense layer...')
-        self.model.add(Dense(256, activation='relu'))
+        self.model.add(Dense(512, activation='sigmoid'))
         self.model.add(Dropout(0.5))
         print('Adding Dense layer...')
-        self.model.add(Dense(2, activation='softmax'))
+        self.model.add(Dense(585, activation='softmax'))
         sgd = SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
         print('Compiling Model...')
         self.model.compile(loss='categorical_crossentropy',
@@ -271,4 +281,9 @@ class ModelTrainer():
     def evaluate_model(self):
         score = self.model.evaluate(self.test_features, self.test_labels, batch_size=128)
         return score
-    
+
+
+trainer = ModelTrainer(x_train, y_train, x_test, y_test)
+trainer.build_model_layers()
+trainer.fit_model()
+print(trainer.evaluate_model())
