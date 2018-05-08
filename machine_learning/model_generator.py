@@ -118,12 +118,57 @@ class ModelDataProcessing ():
     def create_one_hot_matrix():
         return
     
-    
-model_processor = ModelDataProcessing(dataset,'AREAS_TEMATICAS_APRESENTACAO')
-training_v = model_processor.assign_training_data()
-test_v = model_processor.assign_test_data()
-validation_v = model_processor.assign_validation_data()
+# TESTING
+#model_processor = ModelDataProcessing(dataset,'AREAS_TEMATICAS_APRESENTACAO')
+#training_v = model_processor.assign_training_data()
+#test_v = model_processor.assign_test_data()
+#validation_v = model_processor.assign_validation_data()
+#
+#features = model_processor.extract_features()
+#label = model_processor.extract_label()
+#label = model_processor.num_categorizer('AREAS_TEMATICAS_APRESENTACAO')
 
-features = model_processor.extract_features()
-label = model_processor.extract_label()
-label = model_processor.num_categorizer('AREAS_TEMATICAS_APRESENTACAO')
+
+class ModelTrainer():
+    """
+        Creates the model and train it.
+        
+        Parameters:
+            training_features: 
+                An array of the features to be used in prediction.
+            training_labels:
+                An array with the labels to be used in prediction.
+        
+        Returns:
+            A trained model.
+    """    
+    def __init__(self, training_features, training_labels):
+        self.training_features = training_features
+        self.training_labels = training_labels
+        self.model = Sequential()
+    
+    def input_fn():
+        return
+    
+    def build_model_layers(self):
+        self.model.add(Dense(512, input_shape=(max_words,), activation='relu'))
+        self.model.add(Dropout(0.5))
+        self.model.add(Dense(256, activation='sigmoid'))
+        self.model.add(Dropout(0.5))
+        self.model.add(Dense(2, activation='softmax'))
+        self.model.compile(loss='categorical_crossentropy',
+                      optimizer='adam',
+                      metrics=['accuracy'])
+        return self.model
+        
+    def fit_model(self):
+        self.model.fit(self.training_features, self.training_labels,
+                  batch_size=32,
+                  epochs=5,
+                  verbose=1,
+                  validation_split=0.1,
+                  shuffle=True)
+        return self.model
+    
+    def evaluate_model():
+        return
