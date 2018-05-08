@@ -4,6 +4,7 @@ import text_processor as tp
 import keras as krs
 from keras.models import Sequential
 from keras.layers import Dense, Dropout, Activation
+from keras.optimizers import SGD
 
 
 dataset = pd.read_excel('Dataset.xlsx')
@@ -116,17 +117,23 @@ class ModelDataProcessing ():
         return self.dataset
     
     def create_one_hot_matrix():
+        
         return
     
+    def num_classes(self):
+        num_classes = self.dataset[self.label].unique().max() + 1
+        return num_classes
+    
 # TESTING
-#model_processor = ModelDataProcessing(dataset,'AREAS_TEMATICAS_APRESENTACAO')
-#training_v = model_processor.assign_training_data()
-#test_v = model_processor.assign_test_data()
-#validation_v = model_processor.assign_validation_data()
-#
-#features = model_processor.extract_features()
-#label = model_processor.extract_label()
-#label = model_processor.num_categorizer('AREAS_TEMATICAS_APRESENTACAO')
+model_processor = ModelDataProcessing(dataset,'AREAS_TEMATICAS_APRESENTACAO')
+training_v = model_processor.assign_training_data()
+test_v = model_processor.assign_test_data()
+validation_v = model_processor.assign_validation_data()
+
+features = model_processor.extract_features()
+label = model_processor.extract_label()
+label = model_processor.num_categorizer('AREAS_TEMATICAS_APRESENTACAO')
+label_totalclasses = model_processor.num_classes()
 
 
 class ModelTrainer():
@@ -142,33 +149,43 @@ class ModelTrainer():
         Returns:
             A trained model.
     """    
-    def __init__(self, training_features, training_labels):
+    def __init__(self, 
+                 training_features, 
+                 training_labels,
+                 test_features,
+                 test_labels):
         self.training_features = training_features
         self.training_labels = training_labels
-        self.model = Sequential()
+        self.test_features = test_features
+        self.test_labels = test_labels
+        
     
     def input_fn():
         return
     
     def build_model_layers(self):
-        self.model.add(Dense(512, input_shape=(max_words,), activation='relu'))
+        self.model = Sequential()
+        self.model.add(Dense(512, input_shape=(1024,), activation='relu'))
         self.model.add(Dropout(0.5))
-        self.model.add(Dense(256, activation='sigmoid'))
+        self.model.add(Dense(256, activation='relu'))
         self.model.add(Dropout(0.5))
         self.model.add(Dense(2, activation='softmax'))
+        sgd = SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
         self.model.compile(loss='categorical_crossentropy',
-                      optimizer='adam',
+                      optimizer=sgd,
                       metrics=['accuracy'])
         return self.model
         
     def fit_model(self):
         self.model.fit(self.training_features, self.training_labels,
-                  batch_size=32,
-                  epochs=5,
+                  batch_size=64,
+                  epochs=10,
                   verbose=1,
                   validation_split=0.1,
                   shuffle=True)
         return self.model
     
-    def evaluate_model():
-        return
+    def evaluate_model(self):
+        score = self.model.evaluate(self.test_features, self.test_labels, batch_size=128)
+        return score
+    
