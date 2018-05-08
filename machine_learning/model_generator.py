@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import text_processor as tp
 import keras as krs
+import keras.preprocessing.text as kpt
 from keras.models import Sequential
 from keras.layers import Dense, Dropout, Activation
 from keras.preprocessing.text import Tokenizer
@@ -153,13 +154,27 @@ class ModelDataProcessing ():
         num_classes = self.dataset[self.label].unique().max() + 1
         return num_classes
     
+    def convert_text_to_index_array():
+        return
+
+    
     def data_to_matrix(self, data):
         """
             Transforms the input data into a binary matrix
         """
-        tokenizer = Tokenizer(num_words=1000)
-        data = tokenizer.sequences_to_matrix(data, mode='binary')
+        tokenizer = Tokenizer(num_words=3000)
+        tokenizer.fit_on_texts(data)
+        dictionary = tokenizer.word_index
+        def convert_text_to_index_array(text):
+            return [dictionary[word] for word in kpt.text_to_word_sequence(text)]
+        allWordIndices = []
+        for text in data:
+            wordIndices = convert_text_to_index_array(text)
+            allWordIndices.append(wordIndices)
+        allWordIndices = np.asarray(allWordIndices)
+        data = tokenizer.sequences_to_matrix(allWordIndices, mode='binary')
         return data
+    
     
     def process_pipeline():
         return
@@ -181,6 +196,11 @@ y_train = model_processor.assign_y_train()
 
 x_test = model_processor.assign_x_test()
 y_test = model_processor.assign_y_test()
+
+#data_to_matrix tests
+x_train = model_processor.data_to_matrix(x_train)
+x_test = model_processor.data_to_matrix(x_test)
+
 
 #test_v = model_processor.assign_test_data()
 #validation_v = model_processor.assign_validation_data()
@@ -211,6 +231,7 @@ class ModelTrainer():
                  training_labels,
                  test_features,
                  test_labels):
+        print('Booting up Model Trainer')
         self.training_features = training_features
         self.training_labels = training_labels
         self.test_features = test_features
@@ -221,13 +242,18 @@ class ModelTrainer():
         return
     
     def build_model_layers(self):
+        print('Building Model Layers...')
         self.model = Sequential()
+        print('Adding Dense layer...')
         self.model.add(Dense(512, input_shape=(1024,), activation='relu'))
         self.model.add(Dropout(0.5))
+        print('Adding Dense layer...')
         self.model.add(Dense(256, activation='relu'))
         self.model.add(Dropout(0.5))
+        print('Adding Dense layer...')
         self.model.add(Dense(2, activation='softmax'))
         sgd = SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
+        print('Compiling Model...')
         self.model.compile(loss='categorical_crossentropy',
                       optimizer=sgd,
                       metrics=['accuracy'])
