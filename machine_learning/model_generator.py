@@ -1,6 +1,9 @@
 import numpy as np
 import pandas as pd
 import text_processor as tp
+import keras as krs
+from keras.models import Sequential
+from keras.layers import Dense, Dropout, Activation
 
 
 dataset = pd.read_excel('Dataset.xlsx')
@@ -40,7 +43,7 @@ class ModelDataProcessing ():
         text_processor.full_process()
         return self.dataset
     
-    def split_dataframe(self):
+    def __split_dataframe(self):
         """
             Split the dataset into three other datasets.
                 Training Dataset: 
@@ -49,7 +52,9 @@ class ModelDataProcessing ():
                     Data which will be used to validate results.
                 Test Dataset:
                     Data that will be used to run a last test on 
-                    the model with the highest accuracy achieved. 
+                    the model with the highest accuracy achieved.
+            Returns:
+                Three objects of type DataFrame
         """
         
         train_sample_ratio = 70
@@ -66,21 +71,21 @@ class ModelDataProcessing ():
         """
             Creates and assigns to a variable the TRAINING set. 
         """
-        split_frame = ModelDataProcessing(self.dataset, self.label).split_dataframe()[0]
+        split_frame = ModelDataProcessing(self.dataset, self.label).__split_dataframe()[0]
         return split_frame
     
     def assign_test_data(self):
         """
             Creates and assigns to a variable the TEST set.
         """
-        split_frame = ModelDataProcessing(self.dataset, self.label).split_dataframe()[1]
+        split_frame = ModelDataProcessing(self.dataset, self.label).__split_dataframe()[1]
         return split_frame
 
     def assign_validation_data(self):
         """
             Creates and assigns to a variable the VALIDATION set. 
         """
-        split_frame = ModelDataProcessing(self.dataset, self.label).split_dataframe()[2]
+        split_frame = ModelDataProcessing(self.dataset, self.label).__split_dataframe()[2]
         return split_frame
     
 
@@ -88,17 +93,17 @@ class ModelDataProcessing ():
         """
             Extract the labels of the dataset to be used separately.
         """
-        label_frame = pd.DataFrame()
-        label_frame.assign(self.dataset.at[self.label])
+        label_frame = self.dataset[self.label]
         return label_frame
     
     def extract_features(self):
         """
             Extract the features of the dataset to be used separately.
         """
-        return 
+        feature_frame = self.dataset.drop(self.label, axis=1)
+        return feature_frame
     
-    def categorizer(self, column):
+    def num_categorizer(self, column):
         """
             Transforms a categorical column of type String to type Integer.
             
@@ -106,12 +111,19 @@ class ModelDataProcessing ():
                 column: The name of the column of categorical values in the
                 dataset that needs to be converted to integer type.     
         """
-        self.dataset[str(column)] = pd.Categorical(self.dataset.column)
+        self.dataset[str(column)] = pd.Categorical(self.dataset[column])
         self.dataset[str(column)] = self.dataset[str(column)].cat.codes
         return self.dataset
     
+    def create_one_hot_matrix():
+        return
     
-model_processor = ModelDataProcessing(dataset,'TEMAS')
+    
+model_processor = ModelDataProcessing(dataset,'AREAS_TEMATICAS_APRESENTACAO')
 training_v = model_processor.assign_training_data()
 test_v = model_processor.assign_test_data()
 validation_v = model_processor.assign_validation_data()
+
+features = model_processor.extract_features()
+label = model_processor.extract_label()
+label = model_processor.num_categorizer('AREAS_TEMATICAS_APRESENTACAO')
