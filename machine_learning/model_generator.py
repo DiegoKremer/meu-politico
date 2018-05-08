@@ -4,6 +4,7 @@ import text_processor as tp
 import keras as krs
 from keras.models import Sequential
 from keras.layers import Dense, Dropout, Activation
+from keras.preprocessing.text import Tokenizer
 from keras.optimizers import SGD
 
 
@@ -23,6 +24,7 @@ class ModelDataProcessing ():
         
     """
     def __init__(self, dataset, label):
+        print('Booting up Model Data Processor')
         self.dataset = dataset
         self.label = label
     
@@ -31,6 +33,7 @@ class ModelDataProcessing ():
             Randomize the order of the data in the dataset in case the data
             comes sorted by any argument.
         """
+        print('Cluttering the data...')
         self.dataset = self.dataset.reindex(
                 np.random.permutation(self.dataset.index))
         return self.dataset
@@ -41,7 +44,7 @@ class ModelDataProcessing ():
             list of processed words.
         """
         text_processor = tp.TextProcessor(self.dataset,'TEXTO','portuguese')
-        text_processor.full_process()
+        self.dataset = text_processor.full_process()
         return self.dataset
     
     def __split_dataframe(self):
@@ -57,7 +60,7 @@ class ModelDataProcessing ():
             Returns:
                 Three objects of type DataFrame
         """
-        
+        print('Splitting data frames...')
         train_sample_ratio = 70
         train_sample_volume = int((self.dataset.count().values[0] * train_sample_ratio) / 100)
         training_data = self.dataset.head(train_sample_volume)
@@ -94,6 +97,7 @@ class ModelDataProcessing ():
         """
             Extract the labels of the dataset to be used separately.
         """
+        print('Extracting labels...')
         label_frame = self.dataset[self.label]
         return label_frame
     
@@ -101,6 +105,7 @@ class ModelDataProcessing ():
         """
             Extract the features of the dataset to be used separately.
         """
+        print('Extracting features...')
         feature_frame = self.dataset.drop(self.label, axis=1)
         return feature_frame
     
@@ -112,28 +117,52 @@ class ModelDataProcessing ():
                 column: The name of the column of categorical values in the
                 dataset that needs to be converted to integer type.     
         """
+        print('Transforming text to numeric categories...')
         self.dataset[str(column)] = pd.Categorical(self.dataset[column])
         self.dataset[str(column)] = self.dataset[str(column)].cat.codes
         return self.dataset
     
-    def create_one_hot_matrix():
-        
-        return
     
     def num_classes(self):
+        """
+            Get the total number of classes present of a categorical label.
+        """
+        print('Getting total number of classes...')
         num_classes = self.dataset[self.label].unique().max() + 1
         return num_classes
     
+    def data_to_matrix(self, data):
+        """
+            Transforms the input data into a binary matrix
+        """
+        tokenizer = Tokenizer(num_words=1000)
+        data = tokenizer.sequences_to_matrix(data, mode='binary')
+        return data
+    
+    def process_pipeline():
+        return
+    
+    
 # TESTING
+#Booting up class
 model_processor = ModelDataProcessing(dataset,'AREAS_TEMATICAS_APRESENTACAO')
-training_v = model_processor.assign_training_data()
-test_v = model_processor.assign_test_data()
-validation_v = model_processor.assign_validation_data()
 
-features = model_processor.extract_features()
-label = model_processor.extract_label()
-label = model_processor.num_categorizer('AREAS_TEMATICAS_APRESENTACAO')
-label_totalclasses = model_processor.num_classes()
+# Clutter method test
+cluttered_dataset = model_processor.clutter_data_order()
+
+# Text process method test
+processed_text = model_processor.text_processing()
+
+#training_v = model_processor.assign_training_data()
+#test_v = model_processor.assign_test_data()
+#validation_v = model_processor.assign_validation_data()
+#
+#features = model_processor.extract_features()
+#label = model_processor.extract_label()
+#label = model_processor.num_categorizer('AREAS_TEMATICAS_APRESENTACAO')
+#label_totalclasses = model_processor.num_classes()
+
+
 
 
 class ModelTrainer():
