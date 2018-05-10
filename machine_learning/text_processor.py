@@ -28,10 +28,12 @@ class TextProcessor ():
     """
 
     def __init__(self, dataset, column, language):
+        print('Booting up Text Processor')
         self.dataset = dataset
         self.column = column
         self.language = language
         self.tokenized = 'TOKENIZED'
+        self.dataset.reset_index(inplace=True)
     
     def tokenize_text (self): 
         """
@@ -39,6 +41,7 @@ class TextProcessor ():
             words.
         """
         print('Tokenizing Text...')
+        self.dataset.reindex()
         self.dataset = self.dataset.assign(TOKENIZED=pd.Series().astype(list))
         for idx, text in self.dataset.iterrows():
             if not text[self.column]: #Workaround None type in Dataset
@@ -114,6 +117,7 @@ class TextProcessor ():
         processed_dataset = processor.remove_nonalphabetical()
         processed_dataset = processor.set_all_lowercase
         processed_dataset = processor.stemming()
+        processed_dataset = processor.transform_token_to_string(processed_dataset, self.tokenized)
         return processed_dataset
     
     def transform_token_to_string(self, dataset, column):
@@ -127,7 +131,11 @@ class TextProcessor ():
                 resentence = resentence + ' ' + word
                 dataset.at[dataset.index[idx], column] = resentence
         return dataset
+    
+    def dataset_to_file():
         
+        return
+
 
 
 #processador = TextProcessor(df_prop, 'TEXTO', 'portuguese')
