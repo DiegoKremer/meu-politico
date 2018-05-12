@@ -7,9 +7,10 @@ from keras.models import Sequential
 from keras.layers import Dense, Dropout, Activation
 from keras.preprocessing.text import Tokenizer
 from keras.optimizers import SGD
+from sklearn.preprocessing import LabelEncoder
 
 
-dataset = pd.read_excel('Dataset.xlsx')
+dataset = pd.read_excel('Dataset_processed.xlsx')
 
 class ModelDataProcessing ():
     """
@@ -62,14 +63,14 @@ class ModelDataProcessing ():
                 Three objects of type DataFrame
         """
         print('Splitting data frames...')
-        train_sample_ratio = 70
+        train_sample_ratio = 80
         train_sample_volume = int((self.dataset.count().values[0] * train_sample_ratio) / 100)
         training_data = self.dataset.head(train_sample_volume)
-        full_test_data = self.dataset.tail(int(self.dataset.count().values[0] - train_sample_volume))
-        test_sample_volume = int((full_test_data.count().values[0] * 70) / 100)
-        test_data = full_test_data.head(test_sample_volume)
-        validation_data = full_test_data.tail(int(full_test_data.count().values[0] - test_sample_volume))
-        return training_data, test_data, validation_data
+        test_data = self.dataset.tail(int(self.dataset.count().values[0] - train_sample_volume))
+#        test_sample_volume = int((full_test_data.count().values[0] * 70) / 100)
+#        test_data = full_test_data.head(test_sample_volume)
+#        validation_data = full_test_data.tail(int(full_test_data.count().values[0] - test_sample_volume))
+        return training_data, test_data
     
     
     def assign_x_train(self):
@@ -161,9 +162,9 @@ class ModelDataProcessing ():
     
     def data_to_matrix(self, data):
         """
-            Transforms the input data into a binary matrix
+            Transforms the text input data into a binary matrix
         """
-        tokenizer = Tokenizer(num_words=3000)
+        tokenizer = Tokenizer(num_words=6000)
         tokenizer.fit_on_texts(data)
         dictionary = tokenizer.word_index
         def convert_text_to_index_array(text):
@@ -176,40 +177,61 @@ class ModelDataProcessing ():
         data = tokenizer.sequences_to_matrix(allWordIndices, mode='binary')
         return data
     
+    def cat_encode_and_vectorize(self, data):
+        """
+            Transforms a string categorical column into a encoded label and 
+            then output it as a one hot encoded matrix.
+        """
+        data = data.values.astype(str)
+        encoder = LabelEncoder()
+        encoder.fit(data)
+        encoded_data = encoder.transform(data)
+        one_hot_encoded = krs.utils.to_categorical(encoded_data)
+        return one_hot_encoded
     
     def process_pipeline():
         return
-    
+
+
     
 # TESTING
 #Booting up class
-model_processor = ModelDataProcessing(dataset,'AREAS_TEMATICAS_APRESENTACAO')
+model_processor = ModelDataProcessing(dataset,'TEMAS')
 
 # Clutter method test
 cluttered_dataset = model_processor.clutter_data_order()
 
 # Text process method test
-processed_text = model_processor.text_processing()
+#processed_text = model_processor.text_processing()
+#processed_text.to_excel('Processed_File.xlsx', sheet_name = 'Dataset')
 
-num_categorizer = model_processor.num_categorizer('AREAS_TEMATICAS_APRESENTACAO')
-num_classes = model_processor.num_classes()
 
-#Dataset creation tests
-x_train = model_processor.assign_x_train()
-y_train = model_processor.assign_y_train()
+test_add_feat = model_processor.cat_encode_and_vectorize(dataset['SEXO'])
+print(test_add_feat)
 
-x_test = model_processor.assign_x_test()
-y_test = model_processor.assign_y_test()
-
-#data_to_matrix tests
-x_train = model_processor.data_to_matrix(x_train)
-x_test = model_processor.data_to_matrix(x_test)
+#num_categorizer = model_processor.num_categorizer('TEMAS')
+#num_classes = model_processor.num_classes()
+#
+##Dataset creation tests
+#x_train = model_processor.assign_x_train()
+#y_train = model_processor.assign_y_train()
+#
+#x_test = model_processor.assign_x_test()
+#y_test = model_processor.assign_y_test()
+#
+##data_to_matrix tests
+#x_train = model_processor.data_to_matrix(x_train)
+#x_test = model_processor.data_to_matrix(x_test)
 
 #categorical 
 
 
-y_train = krs.utils.to_categorical(y_train, num_classes)
-y_test = krs.utils.to_categorical(y_test, num_classes)
+#y_train = krs.utils.to_categorical(y_train, num_classes)
+#y_test = krs.utils.to_categorical(y_test, num_classes)
+
+#from imblearn.over_sampling import randomoversampler
+#ros = randomoversampler(random_state=0)
+#x_t_resampled, y_t_resampled = ros.fit_sample(x_train, y_train)
 
 
 #test_v = model_processor.assign_test_data()
@@ -217,7 +239,7 @@ y_test = krs.utils.to_categorical(y_test, num_classes)
 #
 #features = model_processor.extract_features()
 #label = model_processor.extract_label()
-#label = model_processor.num_categorizer('AREAS_TEMATICAS_APRESENTACAO')
+#label = model_processor.num_categorizer('TEMAS')
 #label_totalclasses = model_processor.num_classes()
 
 
@@ -255,35 +277,74 @@ class ModelTrainer():
         print('Building Model Layers...')
         self.model = Sequential()
         print('Adding Dense layer...')
-        self.model.add(Dense(1024, input_shape=(3000,), activation='relu'))
+        self.model.add(Dense(512, input_shape=(6000,), activation='relu'))
         self.model.add(Dropout(0.5))
         print('Adding Dense layer...')
-        self.model.add(Dense(512, activation='sigmoid'))
+        self.model.add(Dense(256, activation='relu'))
         self.model.add(Dropout(0.5))
         print('Adding Dense layer...')
-        self.model.add(Dense(585, activation='softmax'))
+        self.model.add(Dense(32, activation='softmax'))
         sgd = SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
         print('Compiling Model...')
         self.model.compile(loss='categorical_crossentropy',
-                      optimizer=sgd,
+                      optimizer='adam',
                       metrics=['accuracy'])
         return self.model
         
     def fit_model(self):
         self.model.fit(self.training_features, self.training_labels,
-                  batch_size=64,
-                  epochs=10,
+                  batch_size=32,
+                  epochs=5,
                   verbose=1,
                   validation_split=0.1,
                   shuffle=True)
         return self.model
     
     def evaluate_model(self):
-        score = self.model.evaluate(self.test_features, self.test_labels, batch_size=128)
+        score = self.model.evaluate(self.test_features, self.test_labels, batch_size=32)
+        print('Test score:', score[0])
+        print('Test accuracy:', score[1])
         return score
 
 
-trainer = ModelTrainer(x_train, y_train, x_test, y_test)
-trainer.build_model_layers()
-trainer.fit_model()
-print(trainer.evaluate_model())
+#trainer = ModelTrainer(x_train, y_train, x_test, y_test)
+#trainer.build_model_layers()
+#trainer.fit_model()
+#trainer.evaluate_model()
+
+##TEST WITHOUT CLASSES
+#
+#print('Building Model Layers...')
+#model = Sequential()
+#print('Adding Dense layer...')
+#model.add(Dense(64, input_shape=(6000,), activation='relu'))
+#model.add(Dropout(0.25))
+#print('Adding Dense layer...')
+#model.add(Dense(64, input_shape=(6000,), activation='relu'))
+#model.add(Dropout(0.25))
+#print('Adding Dense layer...')
+#model.add(Dense(num_classes, activation='softmax'))
+#sgd = SGD(lr=0.7, decay=1e-6, momentum=0.9, nesterov=True)
+#print('Compiling Model...')
+#model.compile(loss='categorical_crossentropy',
+#              optimizer=sgd,
+#              metrics=['accuracy'])
+#
+#
+#model.fit(x_train, y_train,
+#          batch_size=64,
+#          epochs=30,
+#          verbose=1,
+#          validation_split=0.1,
+#          shuffle=True)
+#
+#score = model.evaluate(x_test, 
+#                       y_test, 
+#                       batch_size=512)
+#print('Test score:', score[0])
+#print('Test accuracy:', score[1])
+
+#y_pred = model.predict(x_test)
+#print(y_pred)
+#from sklearn.metrics import confusion_matrix
+#cm = confusion_matrix(y_test, y_pred)
