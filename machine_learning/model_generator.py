@@ -53,41 +53,6 @@ def split_dataframe(dataset):
     return training_data, test_data
 
 
-#def assign_x_train(self):
-#    """
-#        Creates and assigns to a variable the X TRAINING (Features) set. 
-#    """
-#    split_frame = ModelDataProcessing(self.dataset, self.label).split_dataframe()[0]
-#    x_train = ModelDataProcessing(split_frame, self.label).extract_features('TOKENIZED')
-#    return x_train
-#
-#def assign_y_train(self):
-#    """
-#        Creates and assigns to a variable the Y TRAINING (Labels) set. 
-#    """
-#    split_frame = ModelDataProcessing(self.dataset, self.label).split_dataframe()[0]
-#    y_train = ModelDataProcessing(split_frame, self.label).extract_label()
-#    return y_train
-#
-#
-#def assign_x_test(self):
-#    """
-#        Creates and assigns to a variable the X TEST (Features) set.
-#    """
-#    split_frame = ModelDataProcessing(self.dataset, self.label).split_dataframe()[1]
-#    x_test = ModelDataProcessing(split_frame, self.label).extract_features('TOKENIZED')
-#    return x_test
-#
-#
-#def assign_y_test(self):
-#    """
-#        Creates and assigns to a variable the Y TEST (Labels) set.
-#    """
-#    split_frame = ModelDataProcessing(self.dataset, self.label).split_dataframe()[1]
-#    y_train = ModelDataProcessing(split_frame, self.label).extract_label()
-#    return y_train
-
-
 def extract_label(dataset, label):
     """
         Extract the labels of the dataset to be used separately.
@@ -136,7 +101,7 @@ def text_to_matrix(data):
     """
         Transforms the text input data into a binary matrix
     """
-    tokenizer = Tokenizer(num_words=7000)
+    tokenizer = Tokenizer(num_words=6000)
     tokenizer.fit_on_texts(data)
     dictionary = tokenizer.word_index
     def convert_text_to_index_array(text):
@@ -182,38 +147,63 @@ y_train = cat_encode_and_vectorize(y_train)
 y_test = cat_encode_and_vectorize(y_test)
 
 
-#Build X datasets
-#Break the dataset into single features for specific processing and then
-#rebuild it with the matrix values
-features = ['SEXO', 'POLITICO', 'PARTIDO', 'UF', 'REGIAO', 'TOKENIZED']
-datasets = [train, test]
-proc_feat_frame = []
-c = 0
-for dataset in datasets:
-    c += 1
-    for feature in features:
-        feat_frame = extract_feature(dataset, feature)
-        if feature == 'TOKENIZED':
-            feat_frame = text_to_matrix(feat_frame)
-        else:
-            feat_frame = cat_encode_and_vectorize(feat_frame)
-        if proc_feat_frame == []:
-            proc_feat_frame = feat_frame
-        else:
-            proc_feat_frame = np.hstack((proc_feat_frame, feat_frame))
-    if c == 1: x_train = proc_feat_frame
-    else: x_test = proc_feat_frame
+#Extract each feature from the TRAIN dataset, encode it and vectorize 
+#to a binary array
+f_sexo = cat_encode_and_vectorize(extract_feature(train, 'SEXO'))
+f_politico = cat_encode_and_vectorize(extract_feature(train, 'POLITICO'))
+f_partido = cat_encode_and_vectorize(extract_feature(train, 'PARTIDO'))
+f_uf = cat_encode_and_vectorize(extract_feature(train, 'UF'))
+f_regiao = cat_encode_and_vectorize(extract_feature(train, 'REGIAO'))
+f_tokenized = text_to_matrix(extract_feature(train, 'TOKENIZED'))
+            
+#Stacking the processed arrays back into a single file
+x_train = np.hstack((f_sexo, 
+                     f_politico, 
+                     f_partido, 
+                     f_uf, 
+                     f_regiao,
+                     f_tokenized))
 
+#Extract each feature from the TEST dataset, encode it and vectorize 
+#to a binary array
+f_sexo = cat_encode_and_vectorize(extract_feature(test, 'SEXO'))
+f_politico = cat_encode_and_vectorize(extract_feature(test, 'POLITICO'))
+f_partido = cat_encode_and_vectorize(extract_feature(test, 'PARTIDO'))
+f_uf = cat_encode_and_vectorize(extract_feature(test, 'UF'))
+f_regiao = cat_encode_and_vectorize(extract_feature(test, 'REGIAO'))
+f_tokenized = text_to_matrix(extract_feature(test, 'TOKENIZED'))
+
+#Stacking the processed arrays back into a single file
+x_test = np.hstack((f_sexo, 
+                    f_politico, 
+                    f_partido, 
+                    f_uf, 
+                    f_regiao,
+                    f_tokenized))
+
+#Clear unnecessary variable values from memory for faster processing
+dataset = None
+train = None
+test = None
+f_sexo = None
+f_politico = None
+f_partido = None
+f_uf = None
+f_regiao = None
+f_tokenized = None
+
+#Check array shape
+array_shape = x_train.shape[1]
 
 
 #Builds the model
 print('Building Model Layers...')
 model = Sequential()
 print('Adding Dense layer...')
-model.add(Dense(128, input_shape=(8483,), activation='relu'))
+model.add(Dense(128, input_shape=(array_shape,), activation='relu'))
 model.add(Dropout(0.50))
 print('Adding Dense layer...')
-model.add(Dense(64, input_shape=(8483,), activation='sigmoid'))
+model.add(Dense(64, input_shape=(array_shape,), activation='relu'))
 model.add(Dropout(0.50))
 print('Adding Dense layer...')
 model.add(Dense(36, activation='softmax'))
@@ -223,6 +213,7 @@ model.compile(loss='categorical_crossentropy',
               optimizer='adam',
               metrics=['accuracy'])
 
+#Fits and train the model
 model.fit(x_train, y_train,
           batch_size=64,
           epochs=40,
@@ -235,8 +226,3 @@ score = model.evaluate(x_test,
                        batch_size=256)
 print('Test score:', score[0])
 print('Test accuracy:', score[1])
-
-#y_pred = model.predict(x_test)
-#print(y_pred)
-#from sklearn.metrics import confusion_matrix
-#cm = confusion_matrix(y_test, y_pred)
