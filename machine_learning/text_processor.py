@@ -33,7 +33,7 @@ class TextProcessor ():
         self.column = column
         self.language = language
         self.tokenized = 'TOKENIZED'
-        self.dataset.reset_index(inplace=True)
+#        self.dataset.reset_index(drop=True, inplace=True)
     
     def tokenize_text (self): 
         """
@@ -41,8 +41,7 @@ class TextProcessor ():
             words.
         """
         print('Tokenizing Text...')
-        self.dataset.reindex()
-        self.dataset = self.dataset.assign(TOKENIZED=pd.Series().astype(list))
+        self.dataset = self.dataset.assign(TOKENIZED=pd.Series().astype(str))
         for idx, text in self.dataset.iterrows():
             if not text[self.column]: #Workaround None type in Dataset
                 text[self.column] = ''
@@ -67,11 +66,21 @@ class TextProcessor ():
     def remove_nonalphabetical (self):
         """
             Removes all words from the list that are not alphabetical. That 
-            includes numbers, punctuations and empty spaces. 
+            includes numbers, punctuations, special characters and empty spaces. 
         """
         print('Removing non alphabetical characters...')
         for idx, row in self.dataset.iterrows():
             self.dataset.at[self.dataset.index[idx], self.tokenized] = [word for word in row[self.tokenized] if word.isalpha()]
+        return self.dataset
+    
+    def remove_nonalphanumerical (self):
+        """
+            Removes all words from the list that are not alphanumeric. That 
+            includes punctuations, special characters and empty spaces. 
+        """
+        print('Removing non alphabetical characters...')
+        for idx, row in self.dataset.iterrows():
+            self.dataset.at[self.dataset.index[idx], self.tokenized] = [word for word in row[self.tokenized] if word.isalnum()]
         return self.dataset
 
 
@@ -114,7 +123,7 @@ class TextProcessor ():
         processor = TextProcessor(self.dataset, self.column, self.language)
         processed_dataset = processor.tokenize_text()
         processed_dataset = processor.remove_stopwords()
-        processed_dataset = processor.remove_nonalphabetical()
+        processed_dataset = processor.remove_nonalphanumerical()
         processed_dataset = processor.set_all_lowercase
         processed_dataset = processor.stemming()
         processed_dataset = processor.transform_token_to_string(processed_dataset, self.tokenized)
