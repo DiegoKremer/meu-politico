@@ -1,11 +1,11 @@
 import nltk as nltk
 import pandas as pd
-from nltk.corpus import stopwords
 
 
 # Import dataset
 #df_prop = pd.read_excel('Dataset.xlsx')
 
+    
 
 class TextProcessor ():
     """ 
@@ -55,11 +55,14 @@ class TextProcessor ():
             from the text for a given language.
         """
         print('Removing stopwords...')
-        stop_words = set(stopwords.words(self.language))
+        with open('stopwords_ptbr') as file:
+            stopwords = file.readlines()
+            stopwords = [x.strip() for x in stopwords]
+            print('Stopwords Corpus: \n' + str(stopwords))
         for idx, row in self.dataset.iterrows():
             for word in row[self.tokenized]:
-                if word in stop_words:
-                    self.dataset.at[self.dataset.index[idx], self.tokenized] = [w for w in row[self.tokenized] if not w in stop_words]        
+                if word in stopwords:
+                    self.dataset.at[self.dataset.index[idx], self.tokenized] = [w for w in row[self.tokenized] if not w in stopwords]        
         return self.dataset
 
 
@@ -78,7 +81,7 @@ class TextProcessor ():
             Removes all words from the list that are not alphanumeric. That 
             includes punctuations, special characters and empty spaces. 
         """
-        print('Removing non alphabetical characters...')
+        print('Removing non alphanumerical characters...')
         for idx, row in self.dataset.iterrows():
             self.dataset.at[self.dataset.index[idx], self.tokenized] = [word for word in row[self.tokenized] if word.isalnum()]
         return self.dataset
