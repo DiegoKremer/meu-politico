@@ -13,6 +13,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.linear_model import SGDClassifier
 from sklearn.model_selection import GridSearchCV
+from sklearn.externals import joblib
 
 #Importa o Dataset
 print('Importing Dataset')
@@ -76,6 +77,17 @@ print(predicted)
 #print(gs_clf_svm.best_score_)
 #print(gs_clf_svm.best_params_)
 
-
 #Salva o modelo
+print('Saving model')
+joblib.dump(text_clf_svm, 'svm_model.pkl') 
 
+#Carrega modelo
+print('Loading model')
+text_clf_trained = joblib.load('svm_model.pkl')
+
+#Exibe configuração do modelo carregado
+print(text_clf_trained)
+
+#Testa modelo recarregado
+predicted = text_clf_svm.predict(X_test)
+print(np.mean(predicted == Y_test))
